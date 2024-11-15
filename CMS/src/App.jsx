@@ -24,6 +24,7 @@ function App() {
 
         {/* Dashboard Route */}
         <Route path="/dashboard/*" element={<DashBoard/>} />
+        {/* <Route path="/dashboard" element={<DashBoard/>} /> */}
       </Routes>
     </div>
   );
