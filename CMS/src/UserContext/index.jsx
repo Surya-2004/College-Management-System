@@ -5,8 +5,8 @@ const UserContext = createContext();
 
 // Provider component
 export const UserProvider = ({ children }) => {
-  const [role, setRole] = useState('');
-  const [username, setUsername] = useState('');
+  const [role, setRole] = useState('Staff');
+  const [username, setUsername] = useState('admin');
 
   return (
     <UserContext.Provider value={{ role, setRole, username, setUsername }}>

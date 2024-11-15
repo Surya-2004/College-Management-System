@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "../../UserContext";
 import axios from "axios";
@@ -18,7 +18,7 @@ function LoginPage({ onLogin }) {
           role,
         });
 
-        if (response.data.success) {
+        if (response.status) {
           onLogin();
         } else {
           setErrorMessage("Invalid credentials. Please try again.");
@@ -52,6 +52,7 @@ function LoginPage({ onLogin }) {
           className="px-4 py-2 mb-4 w-full rounded-md text-black"
         >
           <option value="Select your role">Select your role</option>
+          <option value="Admin">Admin</option>
           <option value="Student">Student</option>
           <option value="Staff">Staff</option>
         </select>

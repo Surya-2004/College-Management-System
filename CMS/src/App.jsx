@@ -7,6 +7,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 import LoginPage from "./components/LoginPage";
+import DashBoard from "./components/DashBoard";
 
 function App() {
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ function App() {
         <Route path="/" element={<LoginPage onLogin={handleLogin} />} />
 
         {/* Dashboard Route */}
-        <Route path="/dashboard" element={<DashBoard/>} />
+        <Route path="/dashboard/*" element={<DashBoard/>} />
       </Routes>
     </div>
   );

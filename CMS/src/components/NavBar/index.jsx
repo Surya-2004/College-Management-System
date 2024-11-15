@@ -1,12 +1,16 @@
 import { useUser } from "../../UserContext";
+import StaffNavBar from "./staffNavBar";
+import StudentNavBar from "./studentNavBar";
+import AdminNavBar from "./adminNavBar";
 
 export default function NavBar() {
-  const { role: role } = useUser();
+  const { role } = useUser();
 
-  {
-    role === "Student" && <StudentNavBar />;
-  }
-  {
-    role === "Staff" && <StaffNavBar />;
-  }
+  return (
+    <>
+      {role === "Student" && <StudentNavBar />}
+      {role === "Staff" && <StaffNavBar />}
+      {role === "Admin" && <AdminNavBar />}
+    </>
+  );
 }
