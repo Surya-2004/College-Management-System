@@ -32,7 +32,7 @@ export default function AddAnnouncement() {
 
     try {
       // Make POST request to backend to add the announcement
-      const response = await axios.post("/api/add-announcement", formData, {
+      const response = await axios.post("http://localhost:5000/api/add-announcement", formData, {
         headers: {
           "Content-Type": "multipart/form-data", // Make sure to send form data as multipart
         },
