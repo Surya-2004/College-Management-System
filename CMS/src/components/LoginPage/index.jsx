@@ -7,18 +7,20 @@ function LoginPage({ onLogin }) {
   const { role, setRole, username, setUsername } = useUser();
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   const handleLogin = async () => {
+    setLoading(true);
     if (username && password && role !== "Select your role") {
       try {
-        const response = await axios.post("/api/login", {
+        const response = await axios.post("http://localhost:5000/api/login", {
           username,
           password,
           role,
         });
-
-        if (response.data.success) {
+        if (response.status) {
           onLogin();
         } else {
           setErrorMessage("Invalid credentials. Please try again.");
@@ -30,6 +32,7 @@ function LoginPage({ onLogin }) {
     } else {
       setErrorMessage("Please fill in all fields and select a role!");
     }
+    setLoading(false);
   };
 
   return (
@@ -52,6 +55,7 @@ function LoginPage({ onLogin }) {
           className="px-4 py-2 mb-4 w-full rounded-md text-black"
         >
           <option value="Select your role">Select your role</option>
+          <option value="Admin">Admin</option>
           <option value="Student">Student</option>
           <option value="Staff">Staff</option>
         </select>
@@ -79,8 +83,9 @@ function LoginPage({ onLogin }) {
         <button
           className="bg-[#80d83d] py-3 px-5 w-full rounded-full text-gray-800 font-bold"
           onClick={handleLogin}
+          disabled={loading}
         >
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
       </div>
     </div>
