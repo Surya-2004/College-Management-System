@@ -8,16 +8,19 @@ const app = express();
 
 
 app.use(cors({
-  origin:'http://localhost:5173',
-  methods:['GET','POST'],
-  credentials:true,
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST'],
+  credentials: true,
 }));
 
 
 
 app.use(express.json());
 const loginRoutes = require('./routes/auth');
-app.use('/api', loginRoutes);
+app.use('/api/login', loginRoutes);
+
+const addAnnouncements = require('./routes/addAnnouncements');
+app.use('/api/add-announcement')
 
 
 // Connect to MongoDB
