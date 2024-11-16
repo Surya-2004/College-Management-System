@@ -7,6 +7,7 @@ export default function AddAnnouncement() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [messageAdded, setMessageAdded] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (event) => {
@@ -29,7 +30,7 @@ export default function AddAnnouncement() {
       );
 
       selectedFiles.forEach((file) => formData.append("files", file));
-  
+
       const response = await axios.post(
         "http://localhost:5000/api/add-announcement",
         formData,
@@ -37,9 +38,10 @@ export default function AddAnnouncement() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-  
-      if (response.data.success) {
-        alert("Announcement added successfully!");
+
+      if (response.status) {
+        setErrorMessage("");
+        setMessageAdded("Successfully added announcement.");
         setAnnouncementTitle("");
         setAnnouncementDescription("");
         setSelectedFiles([]);
@@ -53,10 +55,9 @@ export default function AddAnnouncement() {
         "An error occurred while adding the announcement. Please try again."
       );
     }
+    setTimeout(()=>setMessageAdded(""), 5000);
     setLoading(false);
   };
-  
-  
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-900 p-4">
@@ -68,6 +69,12 @@ export default function AddAnnouncement() {
         {errorMessage && (
           <div className="error-box mb-4 p-2 bg-red-500 text-white rounded-md">
             {errorMessage}
+          </div>
+        )}
+
+        {messageAdded && (
+          <div className="error-box mb-4 p-2 bg-green-500 text-white rounded-md">
+            {messageAdded}
           </div>
         )}
 
@@ -130,7 +137,9 @@ export default function AddAnnouncement() {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setSelectedClasses((prev) =>
-                  checked ? [...prev, "C1"] : prev.filter((c) => c !== "C1")
+                  checked
+                    ? [...prev, "Class1"]
+                    : prev.filter((c) => c !== "Class1")
                 );
               }}
             />
@@ -142,8 +151,10 @@ export default function AddAnnouncement() {
               value="2nd Yr"
               onChange={(e) => {
                 const { checked } = e.target;
-                setSelectedClasses((prev) => 
-                  checked ? [...prev, "C2"] : prev.filter((c) => c !== "C2")
+                setSelectedClasses((prev) =>
+                  checked
+                    ? [...prev, "Class2"]
+                    : prev.filter((c) => c !== "Class2")
                 );
               }}
             />
@@ -155,8 +166,10 @@ export default function AddAnnouncement() {
               value="3rd Yr"
               onChange={(e) => {
                 const { checked } = e.target;
-                setSelectedClasses((prev) => 
-                  checked ? [...prev, "C3"] : prev.filter((c) => c !== "C3")
+                setSelectedClasses((prev) =>
+                  checked
+                    ? [...prev, "Class3"]
+                    : prev.filter((c) => c !== "Class3")
                 );
               }}
             />
@@ -168,8 +181,10 @@ export default function AddAnnouncement() {
               value="4th Yr"
               onChange={(e) => {
                 const { checked } = e.target;
-                setSelectedClasses((prev) => 
-                  checked ? [...prev, "C4"] : prev.filter((c) => c !== "C4")
+                setSelectedClasses((prev) =>
+                  checked
+                    ? [...prev, "Class4"]
+                    : prev.filter((c) => c !== "Class4")
                 );
               }}
             />

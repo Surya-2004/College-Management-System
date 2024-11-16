@@ -10,11 +10,6 @@ export default function StaffNavBar() {
           </Link>
         </li>
         <li>
-          <Link to="/dashboard/class-announcements" className="hover:text-yellow-400">
-            Class Announcements
-          </Link>
-        </li>
-        <li>
           <Link to="/dashboard/class-skills" className="hover:text-yellow-400">
             Class Skills
           </Link>
