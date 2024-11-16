@@ -38,14 +38,14 @@ export default function AddAnnouncement() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-
-      if (response.status) {
-        setErrorMessage("");
-        setMessageAdded("Successfully added announcement.");
+  
+      if (response.data.success) {
+        alert("Announcement added successfully!");
         setAnnouncementTitle("");
         setAnnouncementDescription("");
         setSelectedFiles([]);
         setSelectedClasses([]);
+        setErrorMessage("");
       } else {
         setErrorMessage("Failed to add the announcement.");
       }
@@ -137,9 +137,7 @@ export default function AddAnnouncement() {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setSelectedClasses((prev) =>
-                  checked
-                    ? [...prev, "Class1"]
-                    : prev.filter((c) => c !== "Class1")
+                  checked ? [...prev, "C1"] : prev.filter((c) => c !== "C1")
                 );
               }}
             />
@@ -151,10 +149,8 @@ export default function AddAnnouncement() {
               value="2nd Yr"
               onChange={(e) => {
                 const { checked } = e.target;
-                setSelectedClasses((prev) =>
-                  checked
-                    ? [...prev, "Class2"]
-                    : prev.filter((c) => c !== "Class2")
+                setSelectedClasses((prev) => 
+                  checked ? [...prev, "C2"] : prev.filter((c) => c !== "C2")
                 );
               }}
             />
@@ -166,10 +162,8 @@ export default function AddAnnouncement() {
               value="3rd Yr"
               onChange={(e) => {
                 const { checked } = e.target;
-                setSelectedClasses((prev) =>
-                  checked
-                    ? [...prev, "Class3"]
-                    : prev.filter((c) => c !== "Class3")
+                setSelectedClasses((prev) => 
+                  checked ? [...prev, "C3"] : prev.filter((c) => c !== "C3")
                 );
               }}
             />
@@ -181,10 +175,8 @@ export default function AddAnnouncement() {
               value="4th Yr"
               onChange={(e) => {
                 const { checked } = e.target;
-                setSelectedClasses((prev) =>
-                  checked
-                    ? [...prev, "Class4"]
-                    : prev.filter((c) => c !== "Class4")
+                setSelectedClasses((prev) => 
+                  checked ? [...prev, "C4"] : prev.filter((c) => c !== "C4")
                 );
               }}
             />
