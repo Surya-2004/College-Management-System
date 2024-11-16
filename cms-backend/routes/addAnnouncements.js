@@ -16,8 +16,7 @@ router.post('/', upload.array("files"), async (req, res) => {
 
         const { title, description, date } = req.body;
         const files = req.files;
-
-        let filesdata = [];
+        let filesdata = []; 
         if (files) {
             filesdata = files.map((file) => ({
                 filename: file.originalname,

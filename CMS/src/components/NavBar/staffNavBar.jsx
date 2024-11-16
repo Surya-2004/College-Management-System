@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function StaffNavBar() {
   return (
-    <nav className="bg-green-500 text-white p-4">
+    <nav className="bg-green-500 text-white p-4 sticky">
       <ul className="flex space-x-4">
         <li>
           <Link to="/dashboard/timetable" className="hover:text-yellow-400">

@@ -20,7 +20,7 @@ const loginRoutes = require('./routes/auth');
 app.use('/api/login', loginRoutes);
 
 const addAnnouncements = require('./routes/addAnnouncements');
-app.use('/api/add-announcement')
+app.use('/api/add-announcement',addAnnouncements);
 
 
 // Connect to MongoDB

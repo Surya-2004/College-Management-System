@@ -16,4 +16,22 @@
     20%, 60% { transform: translateX(-10px); }
     40%, 80% { transform: translateX(10px); }
   }
+
+  input[type="file"] {
+    color: white;
+    background-color: #333; /* Darker background for the file input */
+    border: 2px dashed #80d83d; /* Green dashed border for better visibility */
+  }
+  
+  input[type="file"]::file-selector-button {
+    background-color: #80d83d; /* Light green button background */
+    color: #333; /* Dark text color */
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+  }
+  
+  input[type="file"]::file-selector-button:hover {
+    background-color: #66c54d; /* Slightly darker green on hover */
+  }
+  
   

@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react";
-import { useUser } from "../../UserContext";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import AnnouncementCard from './announcementCard';
+import { useUser } from '../../UserContext'; // Import context to access username
 
-export default function Announcements() {
-  const { username } = useUser(); // Get the username from context
-  const [announcements, setAnnouncements] = useState([]); // Initialize as an empty array
+const Announcements = () => {
+  const { username } = useUser(); // Access the username from context
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Fetch announcements when the component mounts or when username changes
     const fetchAnnouncements = async () => {
       try {
         const response = await axios.get("/api/announcements", {
-          params: { username }  // Send the username as a query parameter
+          params: { username }  // Send username as query parameter
         });
 
         // Ensure the response data is an array before calling map
@@ -29,9 +31,9 @@ export default function Announcements() {
     };
 
     if (username) {
-      fetchAnnouncements();
+      fetchAnnouncements();  
     }
-  }, [username]);
+  }, [username]); 
 
   if (loading) {
     return <div>Loading announcements...</div>;
@@ -42,20 +44,17 @@ export default function Announcements() {
   }
 
   return (
-    <div>
-      <h2>Announcements for {username}</h2>
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-2xl font-semibold mb-6">Latest Announcements for {username}</h2>
       {announcements.length > 0 ? (
-        <div>
-          {announcements.map((announcement, index) => (
-            <div key={index} className="announcement-card">
-              <h3>{announcement.title}</h3>
-              <p>{announcement.content}</p>
-            </div>
-          ))}
-        </div>
+        announcements.map((announcement, index) => (
+          <AnnouncementCard key={index} announcement={announcement} />
+        ))
       ) : (
         <p>No announcements available.</p>
       )}
     </div>
   );
-}
+};
+
+export default Announcements;

@@ -2,171 +2,188 @@ import { useState } from "react";
 import axios from "axios";
 
 export default function AddAnnouncement() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [classYears, setClassYears] = useState([]); // Array to hold selected class years
-  const [files, setFiles] = useState([]);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementDescription, setAnnouncementDescription] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Handle form submission
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleFileChange = (event) => {
+    setSelectedFiles([...selectedFiles, ...event.target.files]);
+  };
 
-    // Get current date in DD/MM/YYYY format
-    const currentDate = new Date().toLocaleDateString("en-GB");
+  const handleDeleteFile = (index) => {
+    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
 
-    // Create form data to send the request
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("date", currentDate);
-
-    // Append selected class years
-    formData.append("classYears", JSON.stringify(classYears)); // Send as JSON string
-
-    // Append files to formData
-    files.forEach((file) => {
-      formData.append("files", file);
-    });
-
+  const handleSubmit = async () => {
+    setLoading(true);
     try {
-      // Make POST request to backend to add the announcement
-      const response = await axios.post("http://localhost:5000/api/add-announcement", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data", // Make sure to send form data as multipart
-        },
-      });
+      const formData = new FormData();
+      formData.append("title", announcementTitle);
+      formData.append("description", announcementDescription);
+      formData.append("date", new Date().toLocaleDateString("en-GB"));
+      selectedClasses.forEach((classYear) =>
+        formData.append("classes[]", classYear)
+      );
 
-      // Handle success response
-      if (response.status === 200) {
-        setSuccess("Announcement added successfully!");
-        setTitle("");
-        setDescription("");
-        setClassYears([]);
-        setFiles([]);
+      selectedFiles.forEach((file) => formData.append("files", file));
+  
+      const response = await axios.post(
+        "http://localhost:5000/api/add-announcement",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+  
+      if (response.status) {
+        setAnnouncementTitle("");
+        setAnnouncementDescription("");
+        setSelectedFiles([]);
+        setSelectedClasses([]);
+        setErrorMessage("");
+      } else {
+        setErrorMessage("Failed to add the announcement.");
       }
     } catch (error) {
-      setError("Failed to add announcement. Please try again.");
-    }
-  };
-
-  // Handle class year checkbox changes
-  const handleCheckboxChange = (event) => {
-    const { value, checked } = event.target;
-    if (checked) {
-      setClassYears((prevClassYears) => [...prevClassYears, value]); // Add the class year if checked
-    } else {
-      setClassYears((prevClassYears) =>
-        prevClassYears.filter((classYear) => classYear !== value) // Remove the class year if unchecked
+      console.error("Error submitting announcement:", error);
+      setErrorMessage(
+        "An error occurred while adding the announcement. Please try again."
       );
     }
+    setLoading(false);
   };
+  
+  
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-900 text-white">
-      <div className="p-6 bg-gray-800 rounded-md w-96">
-        <h2 className="text-xl mb-4">Add Announcement</h2>
+    <div className="flex justify-center items-center min-h-screen bg-gray-900 p-4">
+      <div className="bg-gray-800 shadow-lg rounded-md p-6 w-full max-w-lg text-white">
+        <h2 className="text-2xl font-semibold mb-4 text-center">
+          Add Announcement
+        </h2>
 
-        {error && (
+        {errorMessage && (
           <div className="error-box mb-4 p-2 bg-red-500 text-white rounded-md">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="success-box mb-4 p-2 bg-green-500 text-white rounded-md">
-            {success}
+            {errorMessage}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group mb-4">
-            <label htmlFor="title" className="block text-sm">Title</label>
+        <label className="block mb-2 font-medium text-gray-200">
+          Announcement Title:
+        </label>
+        <input
+          type="text"
+          value={announcementTitle}
+          onChange={(e) => setAnnouncementTitle(e.target.value)}
+          className="w-full px-4 py-2 mb-4 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring focus:ring-[#80d83d] text-white"
+        />
+
+        <label className="block mb-2 font-medium text-gray-200">
+          Announcement Description:
+        </label>
+        <textarea
+          value={announcementDescription}
+          onChange={(e) => setAnnouncementDescription(e.target.value)}
+          className="w-full px-4 py-2 mb-4 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring focus:ring-[#80d83d] text-white"
+        />
+
+        <label className="block mb-2 font-medium text-gray-200">
+          Attach Files:
+        </label>
+        <input
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          className="mb-4 block w-full text-gray-400"
+        />
+
+        {selectedFiles.length > 0 && (
+          <div className="mb-4">
+            <p className="text-gray-200 font-medium">Selected Files:</p>
+            <ul className="list-disc pl-5">
+              {selectedFiles.map((file, index) => (
+                <li key={index} className="flex items-center">
+                  <span className="mr-2 text-gray-200">{file.name}</span>
+                  <button
+                    onClick={() => handleDeleteFile(index)}
+                    className="text-red-400 hover:text-red-600 text-sm"
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <label className="block mb-2 font-medium text-gray-200">
+          Select Class Year(s):
+        </label>
+        <div className="mb-4 flex flex-wrap">
+          <label className="inline-flex items-center mr-4 mb-2 text-gray-200">
             <input
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="px-4 py-2 w-full rounded-md text-black"
-              required
+              type="checkbox"
+              value="1st Yr"
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setSelectedClasses((prev) =>
+                  checked ? [...prev, "Class1"] : prev.filter((c) => c !== "Class1")
+                );
+              }}
             />
-          </div>
-
-          <div className="form-group mb-4">
-            <label htmlFor="description" className="block text-sm">Description</label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="px-4 py-2 w-full rounded-md text-black"
-              required
-            />
-          </div>
-
-          <div className="form-group mb-4">
-            <label className="block text-sm">Class Year(s)</label>
-            <div>
-              <label className="inline-flex items-center mr-4">
-                <input
-                  type="checkbox"
-                  value="1st Year"
-                  checked={classYears.includes("1st Year")}
-                  onChange={handleCheckboxChange}
-                  className="form-checkbox"
-                />
-                <span className="ml-2">1st Year</span>
-              </label>
-              <label className="inline-flex items-center mr-4">
-                <input
-                  type="checkbox"
-                  value="2nd Year"
-                  checked={classYears.includes("2nd Year")}
-                  onChange={handleCheckboxChange}
-                  className="form-checkbox"
-                />
-                <span className="ml-2">2nd Year</span>
-              </label>
-              <label className="inline-flex items-center mr-4">
-                <input
-                  type="checkbox"
-                  value="3rd Year"
-                  checked={classYears.includes("3rd Year")}
-                  onChange={handleCheckboxChange}
-                  className="form-checkbox"
-                />
-                <span className="ml-2">3rd Year</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  value="4th Year"
-                  checked={classYears.includes("4th Year")}
-                  onChange={handleCheckboxChange}
-                  className="form-checkbox"
-                />
-                <span className="ml-2">4th Year</span>
-              </label>
-            </div>
-          </div>
-
-          <div className="form-group mb-4">
-            <label htmlFor="files" className="block text-sm">Attach Files</label>
+            <span>1st Yr</span>
+          </label>
+          <label className="inline-flex items-center mr-4 mb-2 text-gray-200">
             <input
-              type="file"
-              id="files"
-              multiple
-              onChange={(e) => setFiles(e.target.files)}
-              className="px-4 py-2 w-full rounded-md text-black"
+              type="checkbox"
+              value="2nd Yr"
+              onChange={(e) => {
+                const { checked } = e.target;
+                setSelectedClasses((prev) => 
+                  checked ? [...prev, "Class2"] : prev.filter((c) => c !== "Class2")
+                );
+              }}
             />
-          </div>
+            <span>2nd Yr</span>
+          </label>
+          <label className="inline-flex items-center mr-4 mb-2 text-gray-200">
+            <input
+              type="checkbox"
+              value="3rd Yr"
+              onChange={(e) => {
+                const { checked } = e.target;
+                setSelectedClasses((prev) => 
+                  checked ? [...prev, "Class3"] : prev.filter((c) => c !== "Class3")
+                );
+              }}
+            />
+            <span>3rd Yr</span>
+          </label>
+          <label className="inline-flex items-center mr-4 mb-2 text-gray-200">
+            <input
+              type="checkbox"
+              value="4th Yr"
+              onChange={(e) => {
+                const { checked } = e.target;
+                setSelectedClasses((prev) => 
+                  checked ? [...prev, "Class4"] : prev.filter((c) => c !== "Class4")
+                );
+              }}
+            />
+            <span>4th Yr</span>
+          </label>
+        </div>
 
-          <button
-            type="submit"
-            className="bg-[#80d83d] py-3 px-5 w-full rounded-full text-gray-800 font-bold"
-          >
-            Add Announcement
-          </button>
-        </form>
+        <button
+          onClick={handleSubmit}
+          className="bg-[#80d83d] py-3 px-5 w-full rounded-full text-gray-900 font-bold"
+          disabled={loading}
+        >
+          {loading ? "Submitting..." : "Submit Announcement"}
+        </button>
       </div>
     </div>
   );
