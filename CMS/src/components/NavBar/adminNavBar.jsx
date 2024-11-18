@@ -5,11 +5,6 @@ export default function AdminNavBar() {
     <nav className="bg-red-500 text-white p-4 sticky">
       <ul className="flex space-x-4">
         <li>
-          <Link to="/dashboard/class-announcements" className="hover:text-yellow-400">
-            Class Announcements
-          </Link>
-        </li>
-        <li>
           <Link to="/dashboard/class-skills" className="hover:text-yellow-400">
             Class Skills
           </Link>
