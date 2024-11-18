@@ -1,6 +1,5 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
 
 function RegisterPage() {
   const [userName, setUserName] = useState("");
@@ -10,21 +9,19 @@ function RegisterPage() {
   const [role, setRole] = useState("Select your role");
   const [year, setYear] = useState("");
   const [batch, setBatch] = useState("");
-  const [image, setImage] = useState(null); // State for storing the selected image
   const [imageBase64, setImageBase64] = useState(""); // State for storing the base64 encoded image
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [password, setPassword] = useState("");
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file);
       convertImageToBase64(file);
     }
   };
 
-  // Function to convert the image file to base64 format
   const convertImageToBase64 = (file) => {
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -37,34 +34,44 @@ function RegisterPage() {
     setLoading(true);
     if (userName && name && email && phone && role !== "Select your role") {
       try {
-        const formData = new FormData();
-        formData.append("userName", userName);
-        formData.append("name", name);
-        formData.append("email", email);
-        formData.append("phone", phone);
-        formData.append("role", role);
-        if (role === "Student") {
-          formData.append("year", year);
-          formData.append("batch", batch);
-        }
+        const data = {
+          userName,
+          password,
+          name,
+          email,
+          phone,
+          role,
+          image: imageBase64, // Base64 encoded image
 
-        // Append the base64 encoded image
-        if (imageBase64) {
-          formData.append("image", imageBase64);
-        }
+          ...(role === "Student" && {
+            year,
+            batch,
+          }),
+        };
+
+        console.log("Data before sending:", data); // Log the JSON data
 
         const response = await axios.post(
           "http://localhost:5000/api/register",
-          formData,
+          data,
           {
             headers: {
-              "Content-Type": "multipart/form-data", // Set the header for multipart form data
+              "Content-Type": "application/json", // Set content type as JSON
             },
           }
         );
 
-        if (response.status === 200) {
-          navigate("/login");
+        if (response.status===201) {
+          setSuccessMessage("Registeration Successfull");
+          setErrorMessage("");
+          setName("");
+          setEmail("");
+          setBatch("");
+          setPassword("");
+          setImageBase64("");
+          setYear("");
+          setRole("");
+
         } else {
           setErrorMessage("Registration failed. Please try again.");
         }
@@ -76,16 +83,24 @@ function RegisterPage() {
       setErrorMessage("Please fill in all fields and select a role!");
     }
     setLoading(false);
+    setTimeout(() => setErrorMessage(""), 5000);
+    setTimeout(() => setSuccessMessage(""), 5000);
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-900 text-white">
+    <div className="flex justify-center items-center h-auto bg-gray-900 text-white">
       <div className="p-6 bg-gray-800 rounded-md w-full max-w-lg">
         <h2 className="text-xl mb-4">Register</h2>
 
         {errorMessage && (
-          <div className="mb-4 p-2 bg-red-500 text-white rounded-md">
+          <div className="error-box mb-4 p-2 bg-red-500 text-white rounded-md">
             {errorMessage}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="error-box mb-4 p-2 bg-green-500 text-white rounded-md">
+            {successMessage}
           </div>
         )}
 
@@ -109,6 +124,16 @@ function RegisterPage() {
           placeholder="Username"
           value={userName}
           onChange={(e) => setUserName(e.target.value)}
+          className="px-4 py-2 mb-4 w-full rounded-md text-black"
+          required
+        />
+
+        <label>Enter your Password:</label>
+        <input
+          type="text"
+          placeholder="Username"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           className="px-4 py-2 mb-4 w-full rounded-md text-black"
           required
         />
