@@ -52,7 +52,9 @@ function RegisterPage() {
         if (imageBase64) {
           formData.append("image", imageBase64);
         }
-
+        formData.forEach((value, key) => {
+          console.log(`${key}: ${value}`);
+        });
         const response = await axios.post(
           "http://localhost:5000/api/register",
           formData,
@@ -79,7 +81,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-900 text-white">
+    <div className="flex justify-center items-center h-auto bg-gray-900 text-white">
       <div className="p-6 bg-gray-800 rounded-md w-full max-w-lg">
         <h2 className="text-xl mb-4">Register</h2>
 

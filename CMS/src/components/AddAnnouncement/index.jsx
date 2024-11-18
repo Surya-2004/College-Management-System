@@ -7,7 +7,7 @@ export default function AddAnnouncement() {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedClasses, setSelectedClasses] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const [messageAdded, setMessageAdded] = useState("");
+  const [announcementAdded, setAnnouncementAdded] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (event) => {
@@ -18,7 +18,9 @@ export default function AddAnnouncement() {
     setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    event.preventDefault(); // Prevent form's default behavior
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -28,8 +30,8 @@ export default function AddAnnouncement() {
       selectedClasses.forEach((classYear) =>
         formData.append("classes[]", classYear)
       );
-
       selectedFiles.forEach((file) => formData.append("files", file));
+
 
       const response = await axios.post(
         "http://localhost:5000/api/add-announcement",
@@ -38,14 +40,15 @@ export default function AddAnnouncement() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-  
-      if (response.data.success) {
-        alert("Announcement added successfully!");
+
+      if (response.status === 201) {
+        // Check for successful response
+        setAnnouncementAdded("Announcement Added Successfully.");
+        // Clear the form fields after successful submission
         setAnnouncementTitle("");
         setAnnouncementDescription("");
         setSelectedFiles([]);
         setSelectedClasses([]);
-        setErrorMessage("");
       } else {
         setErrorMessage("Failed to add the announcement.");
       }
@@ -54,9 +57,11 @@ export default function AddAnnouncement() {
       setErrorMessage(
         "An error occurred while adding the announcement. Please try again."
       );
+    } finally {
+      setLoading(false);
+      setTimeout(() => setErrorMessage(""), 5000);
+      setTimeout(() => setAnnouncementAdded(""), 5000); // Reset success message after 5 seconds
     }
-    setTimeout(()=>setMessageAdded(""), 5000);
-    setLoading(false);
   };
 
   return (
@@ -71,10 +76,9 @@ export default function AddAnnouncement() {
             {errorMessage}
           </div>
         )}
-
-        {messageAdded && (
+        {announcementAdded && (
           <div className="error-box mb-4 p-2 bg-green-500 text-white rounded-md">
-            {messageAdded}
+            {announcementAdded}
           </div>
         )}
 
@@ -134,10 +138,13 @@ export default function AddAnnouncement() {
             <input
               type="checkbox"
               value="1st Yr"
+              checked={selectedClasses.includes("Class1")}
               onChange={(e) => {
                 const checked = e.target.checked;
                 setSelectedClasses((prev) =>
-                  checked ? [...prev, "C1"] : prev.filter((c) => c !== "C1")
+                  checked
+                    ? [...prev, "Class1"]
+                    : prev.filter((c) => c !== "Class1")
                 );
               }}
             />
@@ -147,10 +154,13 @@ export default function AddAnnouncement() {
             <input
               type="checkbox"
               value="2nd Yr"
+              checked={selectedClasses.includes("Class2")}
               onChange={(e) => {
-                const { checked } = e.target;
-                setSelectedClasses((prev) => 
-                  checked ? [...prev, "C2"] : prev.filter((c) => c !== "C2")
+                const checked = e.target.checked;
+                setSelectedClasses((prev) =>
+                  checked
+                    ? [...prev, "Class2"]
+                    : prev.filter((c) => c !== "Class2")
                 );
               }}
             />
@@ -160,10 +170,13 @@ export default function AddAnnouncement() {
             <input
               type="checkbox"
               value="3rd Yr"
+              checked={selectedClasses.includes("Class3")}
               onChange={(e) => {
-                const { checked } = e.target;
-                setSelectedClasses((prev) => 
-                  checked ? [...prev, "C3"] : prev.filter((c) => c !== "C3")
+                const checked = e.target.checked;
+                setSelectedClasses((prev) =>
+                  checked
+                    ? [...prev, "Class3"]
+                    : prev.filter((c) => c !== "Class3")
                 );
               }}
             />
@@ -173,10 +186,13 @@ export default function AddAnnouncement() {
             <input
               type="checkbox"
               value="4th Yr"
+              checked={selectedClasses.includes("Class4")}
               onChange={(e) => {
-                const { checked } = e.target;
-                setSelectedClasses((prev) => 
-                  checked ? [...prev, "C4"] : prev.filter((c) => c !== "C4")
+                const checked = e.target.checked;
+                setSelectedClasses((prev) =>
+                  checked
+                    ? [...prev, "Class4"]
+                    : prev.filter((c) => c !== "Class4")
                 );
               }}
             />
@@ -185,6 +201,7 @@ export default function AddAnnouncement() {
         </div>
 
         <button
+          type="submit" // Ensure the button triggers form submission
           onClick={handleSubmit}
           className="bg-[#80d83d] py-3 px-5 w-full rounded-full text-gray-900 font-bold"
           disabled={loading}
