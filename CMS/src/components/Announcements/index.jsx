@@ -18,6 +18,7 @@ const Announcements = () => {
         });
 
         // Ensure the response data is an array before calling map
+        console.log(response);
         if (Array.isArray(response.data)) {
           setAnnouncements(response.data);
         } else {
