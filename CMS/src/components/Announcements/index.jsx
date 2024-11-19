@@ -13,11 +13,12 @@ const Announcements = () => {
     // Fetch announcements when the component mounts or when username changes
     const fetchAnnouncements = async () => {
       try {
-        const response = await axios.get("/api/announcements", {
+        const response = await axios.get("http://localhost:5000/api/announcements", {
           params: { username }  // Send username as query parameter
         });
 
         // Ensure the response data is an array before calling map
+        console.log(response);
         if (Array.isArray(response.data)) {
           setAnnouncements(response.data);
         } else {
