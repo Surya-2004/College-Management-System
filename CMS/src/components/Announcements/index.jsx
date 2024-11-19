@@ -13,7 +13,7 @@ const Announcements = () => {
     // Fetch announcements when the component mounts or when username changes
     const fetchAnnouncements = async () => {
       try {
-        const response = await axios.get("/api/announcements", {
+        const response = await axios.get("http://localhost:5000/api/announcements", {
           params: { username }  // Send username as query parameter
         });
 

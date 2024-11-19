@@ -13,7 +13,9 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
 
   const handleAttendanceChange = (studentId, status) => {
     const updated = [...attendanceRecords];
-    const index = updated.findIndex((record) => record.studentId === studentId);
+    const index = updated.findIndex(
+      (record) => record.studentId === studentId
+    );
     if (index !== -1) {
       updated[index].status = status;
     } else {
@@ -26,25 +28,28 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
   const handleSubmitAttendance = async () => {
     try {
       // Sending the attendance records to the backend API
-      const response = await fetch(`http://localhost:5000/api/attendance/submit/${classId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ attendanceRecords }),
-      });
-  
+      const response = await fetch(
+        `http://localhost:5000/api/attendance/submit/${classId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ attendanceRecords }),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to submit attendance.");
       }
-  
+
       // If the submission is successful
       console.log("Attendance Submitted:", attendanceRecords);
       alert("Attendance submitted successfully!"); // Optionally show a success message
-  
+
       // Hide the form after submission
       setShowForm(false);
-  
+
       // Trigger the parent callback to update the state
       onAddAttendance(false);
     } catch (error) {
@@ -52,7 +57,6 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
       alert("Error submitting attendance. Please try again later.");
     }
   };
-  
 
   return (
     <div>
@@ -68,14 +72,18 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
                 type="radio"
                 name={`attendance-${student.username}`}
                 value="present"
-                onChange={() => handleAttendanceChange(student.username, "present")}
+                onChange={() =>
+                  handleAttendanceChange(student.username, "present")
+                }
               />{" "}
               Present
               <input
                 type="radio"
                 name={`attendance-${student.username}`}
                 value="absent"
-                onChange={() => handleAttendanceChange(student.username, "absent")}
+                onChange={() =>
+                  handleAttendanceChange(student.username, "absent")
+                }
               />{" "}
               Absent
             </div>
@@ -101,19 +109,32 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
           <div className="flex gap-4 mt-4 mb-4">
             <button
               onClick={() => handleViewToggle("table")}
-              className={`py-2 px-4 rounded-full ${viewFormat === "table" ? "bg-[#80d83d] text-gray-900 font-bold" : "bg-gray-800 text-gray-300"}`}
+              className={`py-2 px-4 rounded-full ${
+                viewFormat === "table"
+                  ? "bg-[#80d83d] text-gray-900 font-bold"
+                  : "bg-gray-800 text-gray-300"
+              }`}
             >
               Table View
             </button>
             <button
               onClick={() => handleViewToggle("graph")}
-              className={`py-2 px-4 rounded-full ${viewFormat === "graph" ? "bg-[#80d83d] text-gray-900 font-bold" : "bg-gray-800 text-gray-300"}`}
+              className={`py-2 px-4 rounded-full ${
+                viewFormat === "graph"
+                  ? "bg-[#80d83d] text-gray-900 font-bold"
+                  : "bg-gray-800 text-gray-300"
+              }`}
             >
               Graph View
             </button>
           </div>
-          {viewFormat === "table" && <AttendanceTable data={attendanceRecords} />}
-          {viewFormat === "graph" && <AttendanceGraph data={attendanceRecords} />}
+
+          {viewFormat === "table" && (
+            <AttendanceTable data={attendanceRecords} />
+          )}
+          {viewFormat === "graph" && (
+            <AttendanceGraph data={attendanceRecords} />
+          )}
         </div>
       )}
     </div>
