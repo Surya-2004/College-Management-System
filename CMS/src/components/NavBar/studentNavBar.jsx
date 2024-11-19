@@ -10,8 +10,8 @@ export default function StudentNavBar() {
           </Link>
         </li>
         <li>
-          <Link to="/dashboard/class-announcements" className="hover:text-yellow-400">
-            Class Announcements
+          <Link to="/dashboard/class-attendance" className="hover:text-yellow-400">
+            Class Attendance
           </Link>
         </li>
         <li>

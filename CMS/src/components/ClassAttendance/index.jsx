@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "../../UserContext";
 import AttendanceGraph from "./attendanceGraph";
 import AttendanceTable from "./attendanceTable";
@@ -6,82 +6,61 @@ import DownloadButton from "./DownloadButton";
 import ClassDetail from "./classDetail";
 
 export default function ClassAttendance() {
-  const { role, class: studentClass } = useUser(); // Get role and class from context
+  const { role, username } = useUser(); // Fetch role and username from context
   const [attendanceData, setAttendanceData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewFormat, setViewFormat] = useState("table");
   const [students, setStudents] = useState([]);
-  const [selectedClassId, setSelectedClassId] = useState(""); // Track selected class ID
+  const [selectedClassId, setSelectedClassId] = useState("");
   const [showAttendanceForm, setShowAttendanceForm] = useState(false);
 
-  useEffect(() => {
-    if (role === "Student") {
-      fetchStudentAttendance();
-    } else if (role === "Staff" || role === "Admin") {
-      if (selectedClassId) {
-        fetchClassAttendance(selectedClassId);
-        fetchClassStudents(selectedClassId);
-      }
-    }
-  }, [role, selectedClassId]);
-
-  const fetchClassAttendance = async (classId) => {
+  // Fetch attendance based on role
+  const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://localhost:5000/api/attendance/class/${classId}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch attendance data.");
+
+      let endpoint = "";
+      if (role === "Student") {
+        endpoint = `http://localhost:5000/api/attendance/student/${username}`;
+      } else if (role === "Staff" || role === "Admin") {
+        endpoint = `http://localhost:5000/api/attendance/class/${selectedClassId}`;
       }
+
+      const response = await fetch(endpoint);
+      if (!response.ok) throw new Error("Failed to fetch attendance data.");
       const data = await response.json();
       setAttendanceData(data.attendance || []);
     } catch (error) {
-      console.error("Error fetching class attendance:", error);
+      console.error("Error fetching attendance:", error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStudentAttendance = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `http://localhost:5000/api/attendance/student/${studentClass}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch student attendance data.");
-      }
-      const data = await response.json();
-      setAttendanceData(data.attendance || []);
-    } catch (error) {
-      console.error("Error fetching student attendance:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Fetch students for a selected class
   const fetchClassStudents = async (classId) => {
     try {
       const response = await fetch(
         `http://localhost:5000/api/students/class/${classId}`
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch students.");
-      }
+      if (!response.ok) throw new Error("Failed to fetch students.");
       const data = await response.json();
       setStudents(data.students || []);
     } catch (error) {
-      console.error("Error fetching students:", error);
+      console.error("Error fetching students:", error.message);
     }
   };
 
-  const handleViewToggle = (format) => {
-    setViewFormat(format);
+  // Handle class selection and fetch attendance + students
+  const handleClassSelection = async (classId) => {
+    setSelectedClassId(classId);
+    await fetchAttendance();
+    await fetchClassStudents(classId);
   };
 
-  const handleClassSelection = (classId) => {
-    setSelectedClassId(classId);
+  // Toggle between table and graph views
+  const handleViewToggle = (format) => {
+    setViewFormat(format);
   };
 
   return (
@@ -90,9 +69,15 @@ export default function ClassAttendance() {
         {role === "Student" ? "Your Attendance" : "Class Attendance"}
       </h2>
 
-      {role === "Student" && (
+      {role === "Student" ? (
         <div>
           <h3 className="text-xl font-bold mb-4">Your Attendance</h3>
+          <button
+            onClick={fetchAttendance}
+            className="py-2 px-4 mb-4 bg-green-500 text-gray-900 font-bold rounded-full hover:bg-green-600"
+          >
+            Load Attendance
+          </button>
           {loading ? (
             <p className="text-gray-300">Loading...</p>
           ) : (
@@ -100,19 +85,31 @@ export default function ClassAttendance() {
               <div className="flex gap-4 mb-4">
                 <button
                   onClick={() => handleViewToggle("table")}
-                  className={`py-2 px-4 rounded-full ${viewFormat === "table" ? "bg-[#80d83d] text-gray-900 font-bold" : "bg-gray-800 text-gray-300"}`}
+                  className={`py-2 px-4 rounded-full ${
+                    viewFormat === "table"
+                      ? "bg-[#80d83d] text-gray-900 font-bold"
+                      : "bg-gray-800 text-gray-300"
+                  }`}
                 >
                   Table View
                 </button>
                 <button
                   onClick={() => handleViewToggle("graph")}
-                  className={`py-2 px-4 rounded-full ${viewFormat === "graph" ? "bg-[#80d83d] text-gray-900 font-bold" : "bg-gray-800 text-gray-300"}`}
+                  className={`py-2 px-4 rounded-full ${
+                    viewFormat === "graph"
+                      ? "bg-[#80d83d] text-gray-900 font-bold"
+                      : "bg-gray-800 text-gray-300"
+                  }`}
                 >
                   Graph View
                 </button>
               </div>
-              {viewFormat === "table" && !showAttendanceForm && <AttendanceTable data={attendanceData} />}
-              {viewFormat === "graph" && !showAttendanceForm && <AttendanceGraph data={attendanceData} />}
+              {viewFormat === "table" && !showAttendanceForm && (
+                <AttendanceTable data={attendanceData} />
+              )}
+              {viewFormat === "graph" && !showAttendanceForm && (
+                <AttendanceGraph data={attendanceData} />
+              )}
               <div className="mt-4">
                 <DownloadButton
                   data={attendanceData}
@@ -123,9 +120,7 @@ export default function ClassAttendance() {
             </>
           )}
         </div>
-      )}
-
-      {(role === "Staff" || role === "Admin") && (
+      ) : (
         <div>
           <h3 className="text-xl font-bold mb-4">Select a Class</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
@@ -135,7 +130,9 @@ export default function ClassAttendance() {
                 onClick={() => handleClassSelection(className)}
                 className="block p-6 rounded-lg shadow-lg text-center text-white bg-green-500 hover:bg-green-600 transition-colors"
               >
-                <h3 className="text-xl font-bold">{className.replace("class", "Class")}</h3>
+                <h3 className="text-xl font-bold">
+                  {className.replace("class", "Class")}
+                </h3>
                 <p className="mt-2">Click to view attendance</p>
               </button>
             ))}

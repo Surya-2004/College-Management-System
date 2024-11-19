@@ -5,9 +5,9 @@ const User = require('../models/users');
 router.post('/', async (req, res) => {
   try {
     const { username, password, role } = req.body;
-    const user = await User.findOne({ username: "admin", role: "Admin" });
+    const user = await User.findOne({ username: username, role: role });
     if (!user) return res.status(404).send("User not by ayush");
-    if (user.password != password) return res.status(401).send("Invalid credentials");
+    if (user.password !== password) return res.status(401).send("Invalid credentials");
 
     res.status(200).send("Login successful");
   } catch (error) {

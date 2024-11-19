@@ -14,6 +14,7 @@ function RegisterPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
+  const [selectedClasses, setSelectedClasses] = useState(""); // State for storing selected class
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -28,6 +29,10 @@ function RegisterPage() {
       setImageBase64(reader.result.split(",")[1]); // Save base64 data without the prefix (data:image/png;base64,)
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleClassSelection = (e) => {
+    setSelectedClasses(e.target.value); // Update selected class with the radio button value
   };
 
   const handleRegister = async () => {
@@ -46,6 +51,7 @@ function RegisterPage() {
           ...(role === "Student" && {
             year,
             batch,
+            class: selectedClasses, // Include selected class for students
           }),
         };
 
@@ -61,8 +67,8 @@ function RegisterPage() {
           }
         );
 
-        if (response.status===201) {
-          setSuccessMessage("Registeration Successfull");
+        if (response.status === 201) {
+          setSuccessMessage("Registration Successful");
           setErrorMessage("");
           setName("");
           setEmail("");
@@ -71,7 +77,7 @@ function RegisterPage() {
           setImageBase64("");
           setYear("");
           setRole("");
-
+          setSelectedClasses(""); // Reset selected class after successful registration
         } else {
           setErrorMessage("Registration failed. Please try again.");
         }
@@ -130,8 +136,8 @@ function RegisterPage() {
 
         <label>Enter your Password:</label>
         <input
-          type="text"
-          placeholder="Username"
+          type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="px-4 py-2 mb-4 w-full rounded-md text-black"
@@ -187,6 +193,23 @@ function RegisterPage() {
               onChange={(e) => setBatch(e.target.value)}
               className="px-4 py-2 mb-4 w-full rounded-md text-black"
             />
+
+            <label>Select your Classes:</label>
+            <div className="mb-4 space-y-4">
+              {["class1", "class2", "class3", "class4"].map((className) => (
+                <div key={className} className="flex items-center">
+                  <input
+                    type="radio"
+                    id={className}
+                    name="classSelection" // Grouping radio buttons under the same name
+                    value={className}
+                    onChange={handleClassSelection} // Only one class can be selected
+                    className="mr-2"
+                  />
+                  <label htmlFor={className} className="text-lg">{className}</label>
+                </div>
+              ))}
+            </div>
           </>
         )}
 
