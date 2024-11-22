@@ -76,6 +76,7 @@ router.get("/class/:classId", async (req, res) => {
     if (!classAttendance) {
       return res.status(404).json({ message: "No attendance record found for this class." });
     }
+    console.log()
 
     res.status(200).json({ classId, data: classAttendance.data });
   } catch (error) {

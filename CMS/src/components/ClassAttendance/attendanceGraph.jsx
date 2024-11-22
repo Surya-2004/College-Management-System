@@ -1,36 +1,81 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Pie, Line } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, LineElement, ArcElement, Title, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  LineElement,
+  PointElement, // Import PointElement
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
 import { toPng } from "html-to-image";
 import DownloadButton from "./DownloadButton";
-import { useUser } from "../../UserContext"; // Importing useUser context
+import { useUser } from "../../UserContext";
+import axios from "axios"; // For API calls
 
-// Register the necessary components
+// Register all required elements, scales, and plugins
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  LineElement, // Register LineElement for Line chart
-  ArcElement, // Register ArcElement for Pie chart
+  LineElement,
+  PointElement, // Register PointElement
+  ArcElement,
   Title,
   Tooltip,
   Legend
 );
 
-export default function AttendanceGraph({ attendanceData }) {
-  const { role } = useUser(); // Get the role from the user context
+export default function AttendanceGraph({ classId }) {
+  const { role, username } = useUser(); // Get the role and username from the user context
+  const [data, setData] = useState(null); // State to store attendance data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [graphType, setGraphType] = useState("Pie"); // Set default graph type to Pie
   const graphRef = useRef(null);
 
-  // Ensure attendanceData is an array before proceeding
-  const safeAttendanceData = Array.isArray(attendanceData) ? attendanceData : [];
+  // Fetch attendance data from the API
+  useEffect(() => {
+    const fetchAttendanceData = async () => {
+      try {
+        setLoading(true);
 
-  // Format data for the pie chart (for Student role)
-  const totalPresent = safeAttendanceData.filter(
-    (student) => student.attendance === "Present"
-  ).length;
-  const totalAbsent = safeAttendanceData.filter(
-    (student) => student.attendance === "Absent"
-  ).length;
+        let endpoint = "";
+        if (role === "Student") {
+          endpoint = `http://localhost:5000/api/attendance/student/${username}`;
+        } else if (role === "Staff" || role === "Admin") {
+          endpoint = `http://localhost:5000/api/attendance/class/${classId}`;
+        } else {
+          throw new Error("Invalid role detected.");
+        }
+
+        const response = await axios.get(endpoint); // Use GET as specified in the provided URLs
+        setData(response.data);
+      } catch (err) {
+        setError("Failed to fetch attendance data. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAttendanceData();
+  }, [classId, username, role]);
+
+  // Ensure data is in the correct structure
+  const safeAttendanceData = data?.data || [];
+
+  // Format data for the pie chart
+  let totalPresent = 0;
+  let totalAbsent = 0;
+
+  safeAttendanceData.forEach(({ attendance }) => {
+    attendance.forEach(({ status }) => {
+      if (status === "Present") totalPresent++;
+      if (status === "Absent") totalAbsent++;
+    });
+  });
 
   const pieChartData = {
     labels: ["Present", "Absent"],
@@ -44,11 +89,11 @@ export default function AttendanceGraph({ attendanceData }) {
     ],
   };
 
-  // Format data for Line Chart (for Staff/Admin roles)
-  // Collect dates and count students present on each date
+  // Format data for the line chart (for Staff/Admin roles)
   const datewiseAttendance = safeAttendanceData.reduce((acc, { date, attendance }) => {
-    if (attendance === "Present") {
-      acc[date] = (acc[date] || 0) + 1; // Increment count for the date
+    if (date !== "N/A") {
+      const presentCount = attendance.filter(({ status }) => status === "Present").length;
+      acc[date] = (acc[date] || 0) + presentCount; // Count present students for each date
     }
     return acc;
   }, {});
@@ -58,7 +103,7 @@ export default function AttendanceGraph({ attendanceData }) {
     datasets: [
       {
         label: "Students Present",
-        data: Object.values(datewiseAttendance), // No. of students present on each date
+        data: Object.values(datewiseAttendance), // Number of students present on each date
         fill: false,
         borderColor: "#80d83d", // Green color for line
         tension: 0.1,
@@ -84,6 +129,14 @@ export default function AttendanceGraph({ attendanceData }) {
     }
   };
 
+  if (loading) {
+    return <p className="text-center text-white">Loading attendance data...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center text-red-500">{error}</p>;
+  }
+
   return (
     <div className="bg-gray-800 text-white p-6 rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-4">
@@ -104,7 +157,8 @@ export default function AttendanceGraph({ attendanceData }) {
       </div>
 
       <div className="mb-4 flex justify-center">
-        <button
+        {(role === "Student") && (
+          <button
           onClick={() => setGraphType("Pie")}
           className={`px-4 py-2 mx-2 font-bold rounded-md ${
             graphType === "Pie"
@@ -114,6 +168,7 @@ export default function AttendanceGraph({ attendanceData }) {
         >
           Pie Chart
         </button>
+        )}
         {(role === "Staff" || role === "Admin") && (
           <button
             onClick={() => setGraphType("Line")}
@@ -135,39 +190,6 @@ export default function AttendanceGraph({ attendanceData }) {
         {(role === "Staff" || role === "Admin") && graphType === "Line" && (
           <Line data={lineChartData} options={options} width={400} height={300} />
         )}
-      </div>
-
-      <div className="mt-6">
-        <h4 className="text-lg font-semibold mb-2">Attendance Table</h4>
-        <table className="w-full text-left bg-gray-700 rounded-lg overflow-hidden">
-          <thead>
-            <tr className="bg-[#80d83d] text-gray-900">
-              <th className="px-4 py-2">Name</th>
-              <th className="px-4 py-2">Attendance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {safeAttendanceData.length === 0 ? (
-              <tr>
-                <td colSpan="2" className="px-4 py-2 text-center">
-                  No data available
-                </td>
-              </tr>
-            ) : (
-              safeAttendanceData.map((student, index) => (
-                <tr
-                  key={index}
-                  className={`${
-                    index % 2 === 0 ? "bg-gray-800" : "bg-gray-700"
-                  }`}
-                >
-                  <td className="px-4 py-2">{student.name}</td>
-                  <td className="px-4 py-2">{student.attendance}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
       </div>
     </div>
   );

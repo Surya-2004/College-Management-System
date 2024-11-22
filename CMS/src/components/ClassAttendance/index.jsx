@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useUser } from "../../UserContext";
 import AttendanceGraph from "./attendanceGraph";
@@ -14,41 +14,48 @@ export default function ClassAttendance() {
   const [students, setStudents] = useState([]);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [showAttendanceForm, setShowAttendanceForm] = useState(false);
+  const [updatedData, setUpdatedData] = useState([]);
 
-  // Fetch attendance based on role
+  var formattedAttendance = [];
+
+  // Fetch attendance data
   const fetchAttendance = async () => {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    console.log(selectedClassId);
+      const endpoint =
+        role === "Student"
+          ? `http://localhost:5000/api/attendance/student/${username}`
+          : `http://localhost:5000/api/attendance/class/${selectedClassId}`;
 
-    const endpoint = role === "Student"
-      ? `http://localhost:5000/api/attendance/student/${username}`
-      : `http://localhost:5000/api/attendance/class/${selectedClassId}`;
+      const response = await axios.get(endpoint);
 
-    const response = await axios.get(endpoint);
-    const { data } = response.data; // Backend sends data in the 'data' field
+      const { data } = response.data;
 
-    // Parse and format attendance data for consistent frontend use
-    const formattedAttendance = data
-    .filter((entry) => entry.date)
-    .map((entry) => ({
-      date: entry.date,
-      attendance: entry.attendance.map((student) => ({
-        studentId: student.studentId,
-        status: student.status,
-      })),
-    }));
-  
+      formattedAttendance = data
+        .filter((entry) => entry.date)
+        .map((entry) => ({
+          date: entry.date,
+          attendance: entry.attendance.map((student) => ({
+            studentId: student.studentId,
+            status: student.status,
+          })),
+        }));
 
-    setAttendanceData(formattedAttendance || []);
-  } catch (error) {
-    console.error("Error fetching attendance:", error.response?.data?.message || error.message);
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setUpdatedData((prev) => {
+        const val = [...prev, ...formattedAttendance];
+        setAttendanceData(val);
+        return val;
+      });
+    } catch (error) {
+      console.error(
+        "Error fetching attendance:",
+        error.response?.data?.message || error.message
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch students for a selected class
   const fetchClassStudents = async (classId) => {
@@ -76,6 +83,13 @@ export default function ClassAttendance() {
     setViewFormat(format);
   };
 
+  // Fetch attendance automatically for students on component mount
+  useEffect(() => {
+    if (role === "Student") {
+      fetchAttendance();
+    }
+  }, [role]);
+
   return (
     <div className="bg-gray-900 text-white p-8 rounded-lg shadow-md w-full max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">
@@ -84,13 +98,6 @@ export default function ClassAttendance() {
 
       {role === "Student" ? (
         <div>
-          <h3 className="text-xl font-bold mb-4">Your Attendance</h3>
-          <button
-            onClick={fetchAttendance}
-            className="py-2 px-4 mb-4 bg-green-500 text-gray-900 font-bold rounded-full hover:bg-green-600"
-          >
-            Load Attendance
-          </button>
           {loading ? (
             <p className="text-gray-300">Loading...</p>
           ) : (
@@ -118,14 +125,14 @@ export default function ClassAttendance() {
                 </button>
               </div>
               {viewFormat === "table" && !showAttendanceForm && (
-                <AttendanceTable data={attendanceData} />
+                <AttendanceTable classId={selectedClassId} />
               )}
               {viewFormat === "graph" && !showAttendanceForm && (
-                <AttendanceGraph data={attendanceData} />
+                <AttendanceGraph classId={selectedClassId} />
               )}
               <div className="mt-4">
                 <DownloadButton
-                  data={attendanceData}
+                  data={formattedAttendance}
                   fileName="student_attendance.csv"
                   fileType="text/csv"
                 />
@@ -143,9 +150,7 @@ export default function ClassAttendance() {
                 onClick={() => handleClassSelection(className)}
                 className="block p-6 rounded-lg shadow-lg text-center text-white bg-green-500 hover:bg-green-600 transition-colors"
               >
-                <h3 className="text-xl font-bold">
-                  {className}
-                </h3>
+                <h3 className="text-xl font-bold">{className}</h3>
                 <p className="mt-2">Click to view attendance</p>
               </button>
             ))}

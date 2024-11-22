@@ -6,6 +6,8 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
   const [viewFormat, setViewFormat] = useState("table");
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   const handleViewToggle = (format) => {
     setViewFormat(format);
@@ -40,14 +42,17 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
       }
 
       console.log("Attendance Submitted:", attendanceRecords);
-      alert("Attendance submitted successfully!");
+      setSuccessMsg("Attendance submitted successfully!");
 
       setShowForm(false);
       onAddAttendance(false);
     } catch (error) {
       console.error("Error submitting attendance:", error);
-      alert("Error submitting attendance. Please try again later.");
+      setErrorMsg("Error submitting attendance. Please try again later.")
     }
+
+    setTimeout(()=>setErrorMsg(""), 5000);
+    setTimeout(()=>setSuccessMsg(""), 5000);
   };
 
   return (
@@ -56,6 +61,17 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
 
       {showForm ? (
         <div>
+          {errorMsg && (
+          <div className="error-box mb-4 p-2 bg-red-500 text-white rounded-md">
+            {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="error-box mb-4 p-2 bg-green-500 text-white rounded-md">
+            {successMsg}
+          </div>
+        )}
           <h4 className="text-lg font-semibold text-gray-200 mb-4">Mark Attendance</h4>
           <div className="space-y-4">
             {students.map((student) => (
@@ -66,7 +82,7 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
                     type="radio"
                     name={`attendance-${student.studentId}`}
                     value="Present"
-                    onChange={() => handleAttendanceChange(student.studentId, "present")}
+                    onChange={() => handleAttendanceChange(student.studentId, "Present")}
                     className="form-radio text-green-500"
                   />
                   <span className="ml-2">Present</span>
@@ -76,7 +92,7 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
                     type="radio"
                     name={`attendance-${student.studentId}`}
                     value="Absent"
-                    onChange={() => handleAttendanceChange(student.studentId, "absent")}
+                    onChange={() => handleAttendanceChange(student.studentId, "Absent")}
                     className="form-radio text-red-500"
                   />
                   <span className="ml-2">Absent</span>
@@ -118,10 +134,10 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
           </div>
 
           {viewFormat === "table" && (
-            <AttendanceTable data={attendanceRecords} />
+            <AttendanceTable classId={classId} />
           )}
           {viewFormat === "graph" && (
-            <AttendanceGraph data={attendanceRecords} />
+            <AttendanceGraph classId={classId} />
           )}
         </div>
       )}

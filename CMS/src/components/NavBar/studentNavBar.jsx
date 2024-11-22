@@ -14,10 +14,7 @@ export default function StudentNavBar() {
         </ul>
 
         {/* Profile and Logout Links on the Top Right */}
-        <div className="ml-auto flex space-x-4">
-          <Link to="/dashboard/profile" className="hover:text-yellow-400">
-            Profile
-          </Link>
+        <div className="ml-auto">
           <Link to="/logout" className="hover:text-yellow-400">
             Logout
           </Link>
