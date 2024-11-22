@@ -3,6 +3,8 @@ const router = express.Router();
 const User = require("../models/users");
 const Student = require("../models/Student");
 const Attendance = require("../models/Attendance");
+const Profile = require("../models/profile");
+
 
 router.use(express.json({ limit: "10mb" }));
 
@@ -18,7 +20,7 @@ router.post("/", async (req, res) => {
             image,
             year,
             batch,
-            class: selectedClass
+            class: selectedClass,
         } = req.body;
 
         // Validate required fields
@@ -27,7 +29,11 @@ router.post("/", async (req, res) => {
         }
 
         if (role === "Student" && (!year || !batch || !selectedClass)) {
-            return res.status(400).json({ error: "Year, batch, and class are required for Student profiles." });
+            return res
+                .status(400)
+                .json({
+                    error: "Year, batch, and class are required for Student profiles.",
+                });
         }
 
         // Save user details in the `users` collection
@@ -36,7 +42,7 @@ router.post("/", async (req, res) => {
             username: userName,
             password,
         });
-        
+
         if (role === "Student") {
             // Save student details in the `students` collection
             const studentData = new Student({
@@ -61,7 +67,9 @@ router.post("/", async (req, res) => {
             }
 
             // Check if there is an empty date entry (null or "N/A")
-            let emptyDateEntry = attendanceRecord.data.find(entry => entry.date === null || entry.date === "N/A");
+            let emptyDateEntry = attendanceRecord.data.find(
+                (entry) => entry.date === null || entry.date === "N/A"
+            );
 
             if (!emptyDateEntry) {
                 // If no empty date entry exists, create one
@@ -71,18 +79,32 @@ router.post("/", async (req, res) => {
                 };
                 attendanceRecord.data.push(emptyDateEntry);
             }
-            
+
             // Add the new student to the empty date entry with status "Absent"
             emptyDateEntry.attendance.push({
                 studentId: userName,
                 status: "Absent",
             });
-            
+
             // Save the updated attendance record
             await user.save();
             await studentData.save();
             await attendanceRecord.save();
         }
+
+        // Save profile details in the `profile` collection
+        const profileData = new Profile({
+            role,
+            userName,
+            name,
+            email,
+            phone,
+            year: role === "Student" ? year : null,
+            batch: role === "Student" ? batch : null,
+            image: image || null,
+        });
+
+        await profileData.save();
 
         res.status(201).json({ message: "The profile has been added successfully." });
     } catch (error) {
@@ -90,5 +112,6 @@ router.post("/", async (req, res) => {
         res.status(500).json({ error: "Data could not be saved." });
     }
 });
+
 
 module.exports = router;

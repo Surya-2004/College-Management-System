@@ -16,26 +16,36 @@ export default function ClassAttendance() {
 
   // Fetch attendance based on role
   const fetchAttendance = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      let endpoint = "";
-      if (role === "Student") {
-        endpoint = `http://localhost:5000/api/attendance/student/${username}`;
-      } else if (role === "Staff" || role === "Admin") {
-        endpoint = `http://localhost:5000/api/attendance/class/${selectedClassId}`;
-      }
+    const endpoint = role === "Student"
+      ? `http://localhost:5000/api/attendance/student/${username}`
+      : `http://localhost:5000/api/attendance/class/${selectedClassId}`;
 
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error("Failed to fetch attendance data.");
-      const data = await response.json();
-      setAttendanceData(data.attendance || []);
-    } catch (error) {
-      console.error("Error fetching attendance:", error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const response = await axios.get(endpoint);
+    const { data } = response.data; // Backend sends data in the 'data' field
+
+    // Parse and format attendance data for consistent frontend use
+    const formattedAttendance = data
+    .filter((entry) => entry.date)
+    .map((entry) => ({
+      date: entry.date,
+      attendance: entry.attendance.map((student) => ({
+        studentId: student.studentId,
+        status: student.status,
+      })),
+    }));
+  
+
+    setAttendanceData(formattedAttendance || []);
+  } catch (error) {
+    console.error("Error fetching attendance:", error.response?.data?.message || error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Fetch students for a selected class
   const fetchClassStudents = async (classId) => {

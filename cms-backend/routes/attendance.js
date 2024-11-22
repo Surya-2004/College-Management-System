@@ -37,6 +37,7 @@ router.post("/add", async (req, res) => {
 
 // Fetch attendance for a student
 router.get("/student/:studentId", async (req, res) => {
+  console.log(req.params.studentId);
   const { studentId } = req.params;
   try {
     // Find all attendance records for the student across dates

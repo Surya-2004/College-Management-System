@@ -18,10 +18,10 @@ function App() {
       <Routes>
         {/* Login Route */}
         <Route path="/" element={<LoginPage onLogin={handleLogin} />} />
+        <Route path="/logout" element={<LoginPage onLogin={handleLogin} />} />
 
-        {/* Dashboard Route */}
         <Route path="/dashboard/*" element={<DashBoard/>} />
-        {/* <Route path="/dashboard" element={<DashBoard/>} /> */}
+        
       </Routes>
     </div>
   );
