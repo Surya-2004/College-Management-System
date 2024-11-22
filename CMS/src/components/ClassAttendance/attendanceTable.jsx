@@ -1,56 +1,82 @@
-import DownloadButton from "./DownloadButton";
+import React from "react";
+import { useUser } from "../../UserContext"; // Import the useUser context
 
 export default function AttendanceTable({ attendanceData }) {
-  const generateCSV = () => {
-    const csvHeader = "Name,Attendance\n";
-    const csvRows = (attendanceData || [])
-      .map((student) => `${student.name},${student.attendance}`)
-      .join("\n");
-    return csvHeader + csvRows;
-  };
+  const { role } = useUser(); // Get the role from the user context
 
-  // Ensure attendanceData is an array before rendering the table
-  if (!Array.isArray(attendanceData)) {
-    return <p className="text-gray-300">No attendance data available.</p>;
-  }
+  // Extract unique dates from the data
+  const uniqueDates = Array.from(
+    new Set(
+      (attendanceData || []).flatMap((entry) => (entry.data || []).map((d) => d.date))
+    )
+  ).sort();
+  
+  const students = role !== "Student" 
+    ? Array.from(
+        new Set(
+          (attendanceData || []).flatMap((entry) =>
+            (entry.data || []).flatMap((d) => d.attendance.map((a) => a.studentId))
+          )
+        )
+      ) 
+    : ["Your Attendance"];// Placeholder for a single row in student role
 
   return (
-    <div className="bg-gray-800 text-white p-6 rounded-lg shadow-md">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">Attendance Table</h3>
-        <DownloadButton
-          data={generateCSV()}
-          fileName="attendance_table.csv"
-          fileType="text/csv"
-        />
-      </div>
-      <table className="w-full bg-gray-700 rounded-lg overflow-hidden text-left">
-        <thead>
-          <tr className="bg-[#80d83d] text-gray-900">
-            <th className="px-4 py-2">Name</th>
-            <th className="px-4 py-2">Attendance</th>
+    <div className="overflow-x-auto">
+      <table className="table-auto border-collapse border border-gray-700 w-full text-left text-sm">
+        <thead className="bg-gray-800 text-white">
+          <tr>
+            {role !== "Student" && (
+              <th className="border border-gray-700 px-4 py-2">Student ID</th>
+            )}
+            {uniqueDates.map((date) => (
+              <th key={date} className="border border-gray-700 px-4 py-2">
+                {date}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
-          {attendanceData.length === 0 ? (
-            <tr>
-              <td colSpan="2" className="px-4 py-2 text-center">
-                No data available
-              </td>
+          {students.map((studentId) => (
+            <tr key={studentId} className="hover:bg-gray-700">
+              {role !== "Student" && (
+                <td className="border border-gray-700 px-4 py-2">{studentId}</td>
+              )}
+              {uniqueDates.map((date) => {
+                const attendanceEntry = attendanceData
+                  .flatMap((entry) => entry.data)
+                  .find(
+                    (d) =>
+                      d.date === date &&
+                      d.attendance.some(
+                        (a) =>
+                          role === "Student" || a.studentId === studentId
+                      )
+                  );
+
+                const status =
+                  attendanceEntry?.attendance.find(
+                    (a) =>
+                      role === "Student" || a.studentId === studentId
+                  )?.status;
+
+                return (
+                  <td
+                    key={date}
+                    className={`border border-gray-700 px-4 py-2 text-center ${
+                      status === "Present"
+                        ? "bg-green-500 text-gray-900"
+                        : status === "Absent"
+                        ? "bg-red-500 text-white"
+                        : "bg-gray-300"
+                    }`}
+                  >
+                    {status || "-"}
+                  </td>
+                );
+              })}
             </tr>
-          ) : (
-            attendanceData.map((student, index) => (
-              <tr
-                key={index}
-                className={`${
-                  index % 2 === 0 ? "bg-gray-800" : "bg-gray-700"
-                }`}
-              >
-                <td className="px-4 py-2">{student.name}</td>
-                <td className="px-4 py-2">{student.attendance}</td>
-              </tr>
-            ))
-          )}
+          ))}
         </tbody>
       </table>
     </div>

@@ -70,6 +70,8 @@ function RegisterPage() {
         if (response.status === 201) {
           setSuccessMessage("Registration Successful");
           setErrorMessage("");
+          setUserName("");
+          setPhone("");
           setName("");
           setEmail("");
           setBatch("");
