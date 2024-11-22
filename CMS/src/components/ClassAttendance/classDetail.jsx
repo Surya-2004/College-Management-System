@@ -59,14 +59,14 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
           <h4 className="text-lg font-semibold text-gray-200 mb-4">Mark Attendance</h4>
           <div className="space-y-4">
             {students.map((student) => (
-              <div key={student.username} className="flex items-center space-x-4">
+              <div key={student.studentId} className="flex items-center space-x-4">
                 <span className="text-white w-1/3">{student.name}</span>
                 <label className="inline-flex items-center text-white">
                   <input
                     type="radio"
-                    name={`attendance-${student.username}`}
-                    value="present"
-                    onChange={() => handleAttendanceChange(student.username, "present")}
+                    name={`attendance-${student.studentId}`}
+                    value="Present"
+                    onChange={() => handleAttendanceChange(student.studentId, "present")}
                     className="form-radio text-green-500"
                   />
                   <span className="ml-2">Present</span>
@@ -74,9 +74,9 @@ const ClassDetail = ({ classId, students, onAddAttendance }) => {
                 <label className="inline-flex items-center text-white">
                   <input
                     type="radio"
-                    name={`attendance-${student.username}`}
-                    value="absent"
-                    onChange={() => handleAttendanceChange(student.username, "absent")}
+                    name={`attendance-${student.studentId}`}
+                    value="Absent"
+                    onChange={() => handleAttendanceChange(student.studentId, "absent")}
                     className="form-radio text-red-500"
                   />
                   <span className="ml-2">Absent</span>

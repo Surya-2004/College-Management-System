@@ -84,4 +84,67 @@ router.get("/class/:classId", async (req, res) => {
   }
 });
 
+router.post("/submit/:classId", async (req, res) => {
+  const { classId } = req.params;
+  const { attendanceRecords: attendance } = req.body;
+
+  try {
+    // Validate the input
+    if (!attendance || !Array.isArray(attendance) || attendance.length === 0) {
+      return res.status(400).json({ message: "Attendance data is required and must be an array." });
+    }
+
+    // Generate today's date in "YYYY-MM-DD" format
+    const date = new Date().toISOString().split("T")[0];
+
+    // Find or create attendance record for the class
+    let classAttendance = await Attendance.findOne({ classId });
+
+    if (!classAttendance) {
+      // If the class attendance record does not exist, create a new one
+      classAttendance = new Attendance({ classId, data: [] });
+    }
+
+    // Check if an entry already exists for the date
+    let dateEntry = classAttendance.data.find((entry) => entry.date === date);
+
+    if (!dateEntry) {
+      // If no entry exists for the date, create one
+      dateEntry = { date, attendance: [] };
+      classAttendance.data.push(dateEntry);
+    }
+
+    // Add or update attendance for each student
+    attendance.forEach((student) => {
+      const { studentId, status } = student;
+
+      // Ensure studentId and status are provided
+      if (!studentId || !status) {
+        throw new Error(`Invalid student attendance data: ${JSON.stringify(student)}`);
+      }
+
+      // Check if the student is already in the attendance for the date
+      const existingStudent = dateEntry.attendance.find((att) => att.studentId === studentId);
+
+      if (existingStudent) {
+        // Update the status if the student already exists
+        existingStudent.status = status;
+      } else {
+        // Add the student to the attendance
+        dateEntry.attendance.push({ studentId, status });
+      }
+    });
+
+    // Save the updated attendance record
+    await classAttendance.save();
+
+    res.status(200).json({ message: "Attendance submitted successfully." });
+  } catch (error) {
+    console.error("Error submitting attendance:", error);
+    res.status(500).json({ message: "Error submitting attendance.", error: error.message });
+  }
+});
+
+
+
 module.exports = router;

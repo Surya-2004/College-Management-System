@@ -137,14 +137,14 @@ export default function ClassAttendance() {
         <div>
           <h3 className="text-xl font-bold mb-4">Select a Class</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            {["class1", "class2", "class3", "class4"].map((className) => (
+            {["Class1", "Class2", "Class3", "Class4"].map((className) => (
               <button
                 key={className}
                 onClick={() => handleClassSelection(className)}
                 className="block p-6 rounded-lg shadow-lg text-center text-white bg-green-500 hover:bg-green-600 transition-colors"
               >
                 <h3 className="text-xl font-bold">
-                  {className.replace("class", "Class")}
+                  {className}
                 </h3>
                 <p className="mt-2">Click to view attendance</p>
               </button>
