@@ -32,8 +32,8 @@ app.use('/api/attendance', attendanceRoutes);
 const studentRoutes = require('./routes/students');
 app.use('/api/students', studentRoutes);
 
-const adddata = require('./routes/dummy');
-app.use('/api/adddata', adddata);
+// const adddata = require('./routes/dummy');
+// app.use('/api/adddata', adddata);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI, {

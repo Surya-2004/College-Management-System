@@ -5,7 +5,7 @@ import {
   CategoryScale,
   LinearScale,
   LineElement,
-  PointElement, // Import PointElement
+  PointElement,
   ArcElement,
   Title,
   Tooltip,
@@ -14,14 +14,14 @@ import {
 import { toPng } from "html-to-image";
 import DownloadButton from "./DownloadButton";
 import { useUser } from "../../UserContext";
-import axios from "axios"; // For API calls
+import axios from "axios";
 
-// Register all required elements, scales, and plugins
+// Register required Chart.js elements
 ChartJS.register(
   CategoryScale,
   LinearScale,
   LineElement,
-  PointElement, // Register PointElement
+  PointElement,
   ArcElement,
   Title,
   Tooltip,
@@ -29,11 +29,11 @@ ChartJS.register(
 );
 
 export default function AttendanceGraph({ classId }) {
-  const { role, username } = useUser(); // Get the role and username from the user context
-  const [data, setData] = useState(null); // State to store attendance data
+  const { role, username } = useUser();
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [graphType, setGraphType] = useState("Pie"); // Set default graph type to Pie
+  const [graphType, setGraphType] = useState(role === "Student" ? "Pie" : "Line"); // Default to "Line" for Admin and Staff
   const graphRef = useRef(null);
 
   // Fetch attendance data from the API
@@ -41,8 +41,8 @@ export default function AttendanceGraph({ classId }) {
     const fetchAttendanceData = async () => {
       try {
         setLoading(true);
-
         let endpoint = "";
+
         if (role === "Student") {
           endpoint = `http://localhost:5000/api/attendance/student/${username}`;
         } else if (role === "Staff" || role === "Admin") {
@@ -51,7 +51,7 @@ export default function AttendanceGraph({ classId }) {
           throw new Error("Invalid role detected.");
         }
 
-        const response = await axios.get(endpoint); // Use GET as specified in the provided URLs
+        const response = await axios.get(endpoint);
         setData(response.data);
       } catch (err) {
         setError("Failed to fetch attendance data. Please try again.");
@@ -63,18 +63,19 @@ export default function AttendanceGraph({ classId }) {
     fetchAttendanceData();
   }, [classId, username, role]);
 
-  // Ensure data is in the correct structure
   const safeAttendanceData = data?.data || [];
 
-  // Format data for the pie chart
+  // Pie chart data
   let totalPresent = 0;
   let totalAbsent = 0;
 
-  safeAttendanceData.forEach(({ attendance }) => {
-    attendance.forEach(({ status }) => {
-      if (status === "Present") totalPresent++;
-      if (status === "Absent") totalAbsent++;
-    });
+  safeAttendanceData.forEach(({ attendance, date }) => {
+    if (date && date !== "N/A") {
+      attendance.forEach(({ status }) => {
+        if (status === "Present") totalPresent++;
+        if (status === "Absent") totalAbsent++;
+      });
+    }
   });
 
   const pieChartData = {
@@ -82,30 +83,30 @@ export default function AttendanceGraph({ classId }) {
     datasets: [
       {
         data: [totalPresent, totalAbsent],
-        backgroundColor: ["#80d83d", "#f44336"], // Green for Present, Red for Absent
+        backgroundColor: ["#80d83d", "#f44336"],
         borderColor: ["#66b133", "#d32f2f"],
         borderWidth: 1,
       },
     ],
   };
 
-  // Format data for the line chart (for Staff/Admin roles)
+  // Line chart data
   const datewiseAttendance = safeAttendanceData.reduce((acc, { date, attendance }) => {
-    if (date !== "N/A") {
+    if (date && date !== "N/A") {
       const presentCount = attendance.filter(({ status }) => status === "Present").length;
-      acc[date] = (acc[date] || 0) + presentCount; // Count present students for each date
+      acc[date] = (acc[date] || 0) + presentCount;
     }
     return acc;
   }, {});
 
   const lineChartData = {
-    labels: Object.keys(datewiseAttendance), // Dates on the x-axis
+    labels: Object.keys(datewiseAttendance),
     datasets: [
       {
         label: "Students Present",
-        data: Object.values(datewiseAttendance), // Number of students present on each date
+        data: Object.values(datewiseAttendance),
         fill: false,
-        borderColor: "#80d83d", // Green color for line
+        borderColor: "#80d83d",
         tension: 0.1,
       },
     ],
@@ -116,9 +117,9 @@ export default function AttendanceGraph({ classId }) {
     plugins: {
       legend: { display: true, position: "top" },
     },
+    maintainAspectRatio: false,
   };
 
-  // Export graph as image
   const downloadGraphAsImage = async () => {
     if (graphRef.current) {
       const dataUrl = await toPng(graphRef.current);
@@ -135,6 +136,10 @@ export default function AttendanceGraph({ classId }) {
 
   if (error) {
     return <p className="text-center text-red-500">{error}</p>;
+  }
+
+  if (Object.keys(datewiseAttendance).length === 0) {
+    return <p className="text-center text-yellow-500">No valid attendance data to display.</p>;
   }
 
   return (
@@ -157,39 +162,27 @@ export default function AttendanceGraph({ classId }) {
       </div>
 
       <div className="mb-4 flex justify-center">
-        {(role === "Student") && (
+        {role === "Student" && (
           <button
-          onClick={() => setGraphType("Pie")}
-          className={`px-4 py-2 mx-2 font-bold rounded-md ${
-            graphType === "Pie"
-              ? "bg-[#80d83d] text-gray-900"
-              : "bg-gray-700 text-white hover:bg-[#80d83d] hover:text-gray-900"
-          }`}
-        >
-          Pie Chart
-        </button>
-        )}
-        {(role === "Staff" || role === "Admin") && (
-          <button
-            onClick={() => setGraphType("Line")}
-            className={`px-4 py-2 mx-2 font-bold rounded-md ${
-              graphType === "Line"
-                ? "bg-[#80d83d] text-gray-900"
-                : "bg-gray-700 text-white hover:bg-[#80d83d] hover:text-gray-900"
-            }`}
+            onClick={() => setGraphType((prev) => (prev === "Pie" ? "Line" : "Pie"))}
+            className="px-4 py-2 font-bold rounded-md bg-[#80d83d] text-gray-900 hover:bg-green-700"
           >
-            Line Chart
+            {graphType === "Pie" ? "Switch to Line Chart" : "Switch to Pie Chart"}
           </button>
         )}
       </div>
 
-      <div ref={graphRef} className="w-full flex justify-center">
-        {graphType === "Pie" && (
-          <Pie data={pieChartData} options={options} width={400} height={300} />
-        )}
-        {(role === "Staff" || role === "Admin") && graphType === "Line" && (
-          <Line data={lineChartData} options={options} width={400} height={300} />
-        )}
+      <div
+        ref={graphRef}
+        className="flex justify-center items-center mx-auto"
+        style={{
+          width: "500px",
+          height: "500px",
+          overflow: "hidden",
+        }}
+      >
+        {graphType === "Pie" && <Pie data={pieChartData} options={options} />}
+        {graphType === "Line" && <Line data={lineChartData} options={options} />}
       </div>
     </div>
   );

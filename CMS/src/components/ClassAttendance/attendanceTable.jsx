@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useUser } from "../../UserContext"; // Import the useUser context
+import { useUser } from "../../UserContext";
 
 export default function AttendanceTable({ classId }) {
-  const { role, username } = useUser(); // Get the role and username from the user context
+  const { role, username } = useUser();
   const [attendanceData, setAttendanceData] = useState([]);
 
   useEffect(() => {
-    // Fetch attendance data whenever classId changes
     const fetchAttendance = async () => {
-      if (!classId && role !== "Student") return; // Do not fetch if classId is not provided for non-student roles
+      if (!classId && role !== "Student") return;
 
       try {
         const endpoint =
@@ -18,10 +17,12 @@ export default function AttendanceTable({ classId }) {
             : `http://localhost:5000/api/attendance/class/${classId}`;
 
         const response = await axios.get(endpoint);
+        console.log(response);
         const { data } = response.data;
         console.log(data);
+
         const formattedAttendance = data
-          .filter((entry) => entry.date)
+          .filter((entry) => entry.date && entry.date !== "N/A") // Exclude "N/A" dates
           .map((entry) => ({
             date: entry.date,
             attendance: entry.attendance.map((student) => ({
@@ -42,10 +43,9 @@ export default function AttendanceTable({ classId }) {
     fetchAttendance();
   }, [classId, role, username]);
 
-  // Extract unique dates from the data
   const uniqueDates = Array.from(
     new Set(
-      attendanceData.flatMap((entry) => entry.date)
+      attendanceData.map((entry) => entry.date) // Extract unique dates
     )
   ).sort();
 
